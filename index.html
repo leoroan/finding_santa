@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Amigo Invisible - Serverless</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f0f2f5; }
+        .card { border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: #0d6efd; }
+        .generated-code { 
+            word-break: break-all; 
+            font-family: monospace; 
+            font-size: 0.8rem;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+  </head>
+  <body>
+
+    <div class="container py-5">
+        <h1 class="text-center mb-4"><i class="bi bi-gift-fill text-primary"></i> Amigo Invisible</h1>
+        
+        <ul class="nav nav-pills nav-fill mb-3 bg-white p-2 rounded shadow-sm" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="pills-create-tab" data-bs-toggle="pill" data-bs-target="#pills-create" type="button">1. Crear Grupo</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="pills-reveal-tab" data-bs-toggle="pill" data-bs-target="#pills-reveal" type="button">2. Descubrir mi Amigo</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="pills-create">
+                <div class="card p-4">
+                    <h4>Armar el Grupo</h4>
+                    <p class="text-muted small">Agrega a todos los participantes. Asegúrate de que no haya nombres repetidos (usa apellidos si es necesario).</p>
+                    
+                    <div class="input-group mb-3">
+                        <input type="text" id="newName" class="form-control" placeholder="Nombre y Apellido" onkeypress="handleEnter(event)">
+                        <button class="btn btn-outline-primary" onclick="addParticipant()">Agregar</button>
+                    </div>
+
+                    <ul class="list-group mb-3" id="participantsList">
+                        </ul>
+
+                    <button class="btn btn-primary w-100 btn-lg" onclick="generateGroupCode()">
+                        <i class="bi bi-magic"></i> Generar Sorteo y Código
+                    </button>
+
+                    <div id="resultContainer" class="mt-4 d-none">
+                        <div class="alert alert-success">
+                            <strong>¡Sorteo realizado!</strong><br>
+                            Copia este código y envíalo al grupo de WhatsApp. Esta cadena contiene toda la información.
+                        </div>
+                        <textarea id="groupCodeOutput" class="form-control generated-code mb-2" readonly></textarea>
+                        <button class="btn btn-dark btn-sm w-100" onclick="copyToClipboard()">
+                            <i class="bi bi-clipboard"></i> Copiar Código
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="pills-reveal">
+                <div class="card p-4">
+                    <h4>¿A quién le regalo?</h4>
+                    <p class="text-muted small">Pega el código que mandaron al grupo y pon tu nombre.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Código del Grupo</label>
+                        <input type="text" id="inputCode" class="form-control" placeholder="Pega aquí la cadena larga...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tu Nombre</label>
+                        <select id="selectMyName" class="form-select" disabled>
+                            <option value="">Primero pega el código arriba...</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-success w-100" onclick="revealFriend()">
+                        <i class="bi bi-search"></i> Ver mi Amigo Invisible
+                    </button>
+
+                    <div id="revealResult" class="alert alert-info mt-3 d-none text-center">
+                        Te tocó regalarle a:
+                        <h2 class="fw-bold mt-2" id="friendNameDisplay">...</h2>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let participants = [];
+
+        // 1. Agregar Participante con validación de unicidad
+        function addParticipant() {
+            const nameInput = document.getElementById('newName');
+            const name = nameInput.value.trim();
+
+            if (!name) return alert("Escribe un nombre.");
+            
+            // Validación de unicidad
+            if (participants.some(p => p.toLowerCase() === name.toLowerCase())) {
+                alert("Ese nombre ya existe. Por favor agrega el apellido o un apodo.");
+                return;
+            }
+
+            participants.push(name);
+            renderList();
+            nameInput.value = '';
+            nameInput.focus();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') addParticipant();
+        }
+
+        function renderList() {
+            const list = document.getElementById('participantsList');
+            list.innerHTML = participants.map((p, index) => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${p}
+                    <button class="btn btn-sm btn-danger" onclick="removeParticipant(${index})">&times;</button>
+                </li>
+            `).join('');
+        }
+
+        function removeParticipant(index) {
+            participants.splice(index, 1);
+            renderList();
+        }
+
+        // 2. La Magia: Sorteo y Generación del Token (Base64)
+        function generateGroupCode() {
+            if (participants.length < 2) return alert("Se necesitan mínimo 2 personas.");
+
+            // Copia del array para mezclar
+            let givers = [...participants];
+            let receivers = [...participants];
+
+            // Algoritmo de "Desarreglo" (Nadie se regala a sí mismo)
+            // Rotamos el array de receptores una posición
+            receivers.push(receivers.shift());
+
+            // Creamos el objeto de pares
+            let matches = {};
+            givers.forEach((giver, i) => {
+                matches[giver] = receivers[i];
+            });
+
+            // Convertimos el objeto a string JSON y luego a Base64 (para que parezca un código)
+            const jsonString = JSON.stringify(matches);
+            // encodeURIComponent para soportar tildes y ñ antes de btoa
+            const token = btoa(encodeURIComponent(jsonString));
+
+            document.getElementById('groupCodeOutput').value = token;
+            document.getElementById('resultContainer').classList.remove('d-none');
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("groupCodeOutput");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Código copiado al portapapeles");
+        }
+
+        // 3. Lógica del Receptor: Decodificar y Mostrar
+        // Escucha cambios en el input del código para llenar el select de nombres automáticamente
+        document.getElementById('inputCode').addEventListener('input', function() {
+            try {
+                const token = this.value.trim();
+                if(!token) return;
+
+                // Decodificar Base64
+                const jsonString = decodeURIComponent(atob(token));
+                const matches = JSON.parse(jsonString);
+                
+                // Llenar el select con las claves (los participantes)
+                const select = document.getElementById('selectMyName');
+                select.innerHTML = '<option value="">Selecciona tu nombre...</option>';
+                select.disabled = false;
+
+                Object.keys(matches).sort().forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.innerText = name;
+                    select.appendChild(option);
+                });
+
+            } catch (e) {
+                // Si el código está incompleto o mal, no hacemos nada o mostramos error sutil
+                console.error("Código inválido aún");
+            }
+        });
+
+        function revealFriend() {
+            const token = document.getElementById('inputCode').value.trim();
+            const myName = document.getElementById('selectMyName').value;
+
+            if (!token || !myName) return alert("Falta el código o tu nombre.");
+
+            try {
+                const jsonString = decodeURIComponent(atob(token));
+                const matches = JSON.parse(jsonString);
+                const target = matches[myName];
+
+                if (target) {
+                    document.getElementById('friendNameDisplay').innerText = target;
+                    document.getElementById('revealResult').classList.remove('d-none');
+                } else {
+                    alert("Error: No se encontró asignación para este nombre.");
+                }
+            } catch (e) {
+                alert("El código del grupo parece inválido.");
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
