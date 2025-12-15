@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
@@ -227,6 +227,284 @@
         }
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html> -->
+
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Amigo Invisible 2026 - byMe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .generated-code { 
+            font-family: monospace; font-size: 0.75rem; background: #e9ecef; 
+            padding: 10px; border-radius: 5px; word-break: break-all; max-height: 80px; overflow-y: auto;
+        }
+        .btn-check-custom:checked + .btn { background-color: #198754; color: white; }
+    </style>
+  </head>
+  <body>
+
+    <div class="container py-5" style="max-width: 600px;">
+        <h2 class="text-center mb-4 fw-bold text-primary"><i class="bi bi-gift"></i>Tu Amigo Invisible</h2>
+        
+        <ul class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-create">1. Crear Grupo</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-reveal">2. Ver mi Regalo</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="tab-create">
+                <div class="card p-4">
+                    <h5 class="mb-3">Ingresar Participantes</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <input type="text" id="addName" class="form-control" placeholder="Nombre (ej: Juan)">
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group">
+                                <input type="text" id="addLastname" class="form-control" placeholder="Apellido" onkeypress="handleEnter(event)">
+                                <button class="btn btn-primary" onclick="addParticipant()"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Lista del grupo (<span id="countDisplay">0</span>):</small>
+                        <ul class="list-group" id="participantsList" style="max-height: 200px; overflow-y: auto;">
+                            </ul>
+                    </div>
+
+                    <button class="btn btn-success w-100 py-2 fw-bold" onclick="generateRandomGroup()">
+                        <i class="bi bi-shuffle"></i> Sortear y Generar Clave
+                    </button>
+
+                    <div id="createResult" class="mt-4 d-none">
+                        <div class="alert alert-warning small">
+                            <i class="bi bi-exclamation-triangle-fill"></i> <strong>Importante:</strong> Envía este código al grupo. Contiene el sorteo encriptado.
+                        </div>
+                        <textarea id="outputToken" class="form-control generated-code mb-2" readonly onclick="this.select()"></textarea>
+                        <button class="btn btn-outline-dark btn-sm w-100" onclick="copyToken()">Copiar Código</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-reveal">
+                <div class="card p-4">
+                    <h5 class="mb-3">¿Quién me tocó?</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Pegar Código del Grupo</label>
+                        <input type="text" id="inputToken" class="form-control" placeholder="Pegar la cadena larga aquí...">
+                    </div>
+
+                    <hr>
+
+                    <p class="small text-muted mb-2">Ingresa tus datos tal cual te registraron:</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <input type="text" id="searchName" class="form-control" placeholder="Tu Nombre">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" id="searchLastname" class="form-control" placeholder="Tu Apellido">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 mb-3" onclick="revealSecretFriend()">
+                        <i class="bi bi-eye-fill"></i> Descubrir
+                    </button>
+
+                    <div id="matchResult" class="alert alert-success text-center d-none fade show">
+                        <h6 class="text-muted text-uppercase small ls-1">Tu Amigo Invisible es:</h6>
+                        <h1 class="display-6 fw-bold my-3" id="friendNameDisplay">...</h1>
+                        <div class="alert alert-danger small mb-0 mt-2">
+                            <i class="bi bi-shield-lock-fill"></i> <strong>¡ATENCIÓN!</strong><br>
+                            Anótalo ya. Por seguridad, <b>no podrás volver a ver este mensaje</b> en este dispositivo.
+                        </div>
+                    </div>
+
+                    <div id="errorAlert" class="alert alert-danger d-none text-center"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let participants = []; // Array de objetos {name, lastname, fullname}
+
+        // --- FUNCIONES DE AYUDA ---
+        const cleanStr = (str) => str.trim().replace(/\s+/g, ' ');
+        const getFullName = (n, l) => `${cleanStr(n)} ${cleanStr(l)}`.toUpperCase(); // Usamos mayúsculas para estandarizar la clave
+
+        // 1. AGREGAR PARTICIPANTE
+        function addParticipant() {
+            const nInput = document.getElementById('addName');
+            const lInput = document.getElementById('addLastname');
+            const name = cleanStr(nInput.value);
+            const lastname = cleanStr(lInput.value);
+
+            if(!name || !lastname) return alert("Por favor ingresa nombre Y apellido.");
+
+            const fullname = getFullName(name, lastname);
+
+            // Validación Unicidad
+            if(participants.some(p => p.fullname === fullname)) {
+                return alert("Esa persona ya está en la lista.");
+            }
+
+            participants.push({ name, lastname, fullname });
+            
+            // Render UI
+            updateList();
+            nInput.value = ''; lInput.value = ''; nInput.focus();
+        }
+
+        function updateList() {
+            const list = document.getElementById('participantsList');
+            document.getElementById('countDisplay').innerText = participants.length;
+            list.innerHTML = participants.map((p, i) => `
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1">
+                    <span>${p.name} <strong>${p.lastname}</strong></span>
+                    <button class="btn btn-sm text-danger" onclick="removeP(${i})"><i class="bi bi-x-lg"></i></button>
+                </li>
+            `).join('');
+        }
+
+        function removeP(index) {
+            participants.splice(index, 1);
+            updateList();
+        }
+
+        function handleEnter(e) { if(e.key === 'Enter') addParticipant(); }
+
+        // 2. ALGORITMO DE SORTEO ALEATORIO (Derangement)
+        function generateRandomGroup() {
+            if(participants.length < 2) return alert("Mínimo 2 personas para jugar.");
+
+            // Extraemos solo los nombres completos para el sorteo
+            let givers = participants.map(p => p.fullname);
+            let receivers = [...givers];
+            
+            let isValid = false;
+            let attempts = 0;
+
+            // Intentamos mezclar hasta que nadie se tenga a sí mismo
+            // Para grupos pequeños esto es instantáneo.
+            while(!isValid && attempts < 1000) {
+                // Fisher-Yates Shuffle
+                for (let i = receivers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [receivers[i], receivers[j]] = [receivers[j], receivers[i]];
+                }
+
+                // Verificamos colisiones (alguien se regala a sí mismo)
+                isValid = givers.every((giver, index) => giver !== receivers[index]);
+                attempts++;
+            }
+
+            if(!isValid) return alert("Error al sortear (grupo muy pequeño o mala suerte). Intenta de nuevo.");
+
+            // Crear el mapa de resultados
+            let matches = {};
+            givers.forEach((giver, i) => {
+                matches[giver] = receivers[i];
+            });
+
+            // Encriptar a Base64
+            // Agregamos un "salt" (timestamp) para que el código cambie siempre aunque sea el mismo grupo
+            const payload = {
+                ts: Date.now(), 
+                data: matches
+            };
+            
+            const jsonStr = JSON.stringify(payload);
+            const token = btoa(encodeURIComponent(jsonStr)); // Codificación segura URL
+
+            document.getElementById('outputToken').value = token;
+            document.getElementById('createResult').classList.remove('d-none');
+        }
+
+        function copyToken() {
+            const t = document.getElementById('outputToken');
+            t.select();
+            document.execCommand('copy');
+            alert("¡Código copiado!");
+        }
+
+        // 3. REVELAR AMIGO (CON SEGURIDAD)
+        function revealSecretFriend() {
+            const token = document.getElementById('inputToken').value.trim();
+            const nVal = document.getElementById('searchName').value;
+            const lVal = document.getElementById('searchLastname').value;
+            
+            const resultBox = document.getElementById('matchResult');
+            const errorBox = document.getElementById('errorAlert');
+            
+            // Reset UI
+            resultBox.classList.add('d-none');
+            errorBox.classList.add('d-none');
+
+            if(!token) return showError("Falta el código del grupo.");
+            if(!nVal || !lVal) return showError("Escribe tu nombre y apellido para buscarte.");
+
+            const myFullname = getFullName(nVal, lVal);
+
+            try {
+                // Decodificar
+                const payload = JSON.parse(decodeURIComponent(atob(token)));
+                const matches = payload.data;
+                const timestamp = payload.ts; // Usamos el TS como ID único del sorteo
+
+                // 1. CHEQUEO DE SEGURIDAD LOCAL (LocalStorage)
+                // Clave única compuesta por: ID_Sorteo + NombreUsuario
+                const storageKey = `seen_${timestamp}_${myFullname.replace(/\s/g, '')}`;
+                
+                if(localStorage.getItem(storageKey)) {
+                    // YA LO VIO ANTES
+                    return showError("⛔ ACCESO DENEGADO. Ya has visto tu amigo invisible anteriormente. Por seguridad no se puede volver a mostrar. Contacta al administrador del sorteo si olvidaste anotarlo.");
+                }
+
+                // 2. BUSCAR MATCH
+                const friend = matches[myFullname];
+
+                if(friend) {
+                    // ÉXITO
+                    document.getElementById('friendNameDisplay').innerText = friend; // Muestra "NOMBRE APELLIDO"
+                    resultBox.classList.remove('d-none');
+                    
+                    // 3. MARCAR COMO VISTO (Bloqueo futuro)
+                    localStorage.setItem(storageKey, "true");
+                } else {
+                    showError("No te encontré en la lista. Revisa si escribiste tu nombre y apellido exactamente igual a como te registraron (tildes, espacios, etc).");
+                }
+
+            } catch(e) {
+                console.error(e);
+                showError("El código del grupo no es válido.");
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorAlert');
+            el.innerText = msg;
+            el.classList.remove('d-none');
+        }
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
