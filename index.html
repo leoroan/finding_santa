@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8">
@@ -111,32 +111,6 @@
 
     </div>
 
-    <!-- <div class="modal fade" id="rulesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-info-circle-fill me-2"></i>Antes de empezar</h5>
-                </div>
-                <div class="modal-body text-center py-4">
-                    <p class="lead mb-4">Bienvenido al sorteo del Amigo Invisible 2026.</p>
-                    
-                    <div class="alert alert-warning text-start small">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>REGLA IMPORTANTE:</strong>
-                        <br>Este sistema vincula tu identidad a este navegador.
-                    </div>
-                    
-                    <ul class="list-unstyled text-start bg-light p-3 rounded">
-                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i> Si eres <strong>Juan</strong>, ingresa tus datos. El sistema recordará que eres Juan.</li>
-                        <li class="mb-2"><i class="bi bi-x-circle text-danger me-2"></i> Si luego viene <strong>María</strong>, deberá usar <strong>otro celular o navegador</strong>.</li>
-                        <li><i class="bi bi-phone text-primary me-2"></i> Un dispositivo = Una persona.</li>
-                    </ul>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-primary px-5 rounded-pill" data-bs-dismiss="modal">Entendido, soy yo</button>
-                </div>
-            </div>
-        </div>
-    </div> -->
     <style>
     .modal-christmas .modal-header {
         background: linear-gradient(135deg, #d42426 0%, #ff4d4d 100%); /* Rojo Santa */
@@ -427,6 +401,430 @@
             document.getElementById('outputToken').select();
             document.execCommand('copy');
             alert("Copiado!");
+        }
+    </script>
+  </body>
+</html> -->
+
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Amigo Invisible @2026 Lean</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .main-card { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        .header-gradient { background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%); color: white; padding: 2rem 1rem; text-align: center; }
+        .generated-code { font-family: monospace; font-size: 0.8rem; background: #212529; color: #00ff9d; padding: 15px; border-radius: 8px; word-break: break-all; }
+        .sticky-result { background-color: #e8f5e9; border: 2px dashed #198754; border-radius: 12px; padding: 2rem; }
+    </style>
+  </head>
+  <body>
+
+    <div class="container py-4 d-flex justify-content-center align-items-center min-vh-100">
+        
+        <div id="loaderView" class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+
+        <div id="participantView" class="col-12 col-md-8 col-lg-5 d-none">
+            <div class="card main-card">
+                <div class="header-gradient">
+                    <i class="bi bi-gift-fill display-4"></i>
+                    <h2 class="fw-bold mt-2">Tu amigo Invisible</h2>
+                    <p class="mb-0 opacity-75">Descubre quién te ha tocado esta navidad 😉</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    
+                    <div id="loginFormSection">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted text-uppercase">1. Código del Grupo</label>
+                            <input type="text" id="inputToken" class="form-control" placeholder="Pega aquí el código largo...">
+                        </div>
+
+                        <div class="row g-2 mb-4">
+                            <div class="col-12"><label class="form-label fw-bold small text-muted text-uppercase">2. ¿Quién eres?</label></div>
+                            <div class="col-6">
+                                <input type="text" id="searchName" class="form-control" placeholder="Nombre">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" id="searchLastname" class="form-control" placeholder="Apellido">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-2 fs-5 fw-bold shadow-sm" onclick="revealSecretFriend()">
+                            <i class="bi bi-search me-2"></i> Ver mi Resultado
+                        </button>
+                        
+                        <div id="errorAlert" class="alert alert-danger mt-3 d-none small"></div>
+                    </div>
+
+                    <div id="persistentResultSection" class="d-none text-center fade show">
+                        <div class="sticky-result">
+                            <h5 class="text-muted mb-3">Hola, <strong id="userNameDisplay"></strong> 👋</h5>
+                            <p class="mb-1 text-uppercase small text-muted letter-spacing-1">Tu misión es regalar a:</p>
+                            <h1 class="display-5 fw-bold text-success my-3" id="friendNameDisplay">...</h1>
+                            <div class="mt-4 pt-3 border-top border-success-subtle">
+                                <small class="text-muted fst-italic">
+                                    <i class="bi bi-lock-fill"></i> Este dispositivo está vinculado a tu nombre.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <small class="text-muted" style="font-size: 10px;">Sistema seguro de sorteo aleatorio</small>
+            </div>
+        </div>
+
+        <div id="adminView" class="col-12 col-md-8 col-lg-6 d-none">
+            <div class="card main-card border-warning border-2">
+                <div class="card-header bg-warning text-dark fw-bold text-center">
+                    <i class="bi bi-gear-fill me-2"></i> PANEL DE ADMINISTRACIÓN
+                </div>
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Crear Nuevo Grupo</h5>
+                    
+                    <div class="input-group mb-3">
+                        <input type="text" id="addName" class="form-control" placeholder="Nombre">
+                        <input type="text" id="addLastname" class="form-control" placeholder="Apellido">
+                        <button class="btn btn-dark" onclick="addParticipant()"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+
+                    <ul class="list-group mb-3 shadow-sm" id="participantsList" style="max-height: 200px; overflow-y: auto;"></ul>
+                    <small class="text-muted d-block mb-3 text-end">Total: <span id="countDisplay">0</span></small>
+
+                    <button class="btn btn-warning w-100 fw-bold mb-3" onclick="generateRandomGroup()">
+                        Generar Link de Invitación
+                    </button>
+
+                    <div id="adminResult" class="d-none">
+                        <label class="form-label fw-bold">Enlace para compartir:</label>
+                        <textarea id="outputToken" class="form-control generated-code mb-2" rows="4" readonly onclick="this.select()"></textarea>
+                        <button class="btn btn-outline-dark w-100 btn-sm" onclick="copyToken()">
+                            <i class="bi bi-link-45deg"></i> Copiar enlace al juego
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="#" onclick="window.location.hash=''; window.location.reload();" class="text-decoration-none small">Volver a la vista de usuario</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+    .modal-christmas .modal-header {
+        background: linear-gradient(135deg, #d42426 0%, #ff4d4d 100%);
+        color: white;
+        border-bottom: none;
+    }
+    .modal-christmas .modal-body {
+        background-color: #fffaf0;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .rule-box {
+        background-color: #e8f5e9;
+        border-left: 5px solid #198754;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: left;
+    }
+    .modal-icon-top {
+        font-size: 3rem;
+        color: #d42426;
+        margin-top: -10px;
+        margin-bottom: 10px;
+        display: block;
+    }
+    .btn-christmas {
+        background-color: #198754;
+        border: none;
+        font-weight: 600;
+        letter-spacing: 1px;
+        transition: transform 0.2s;
+    }
+    .btn-christmas:hover {
+        background-color: #146c43;
+        transform: scale(1.05);
+    }
+    .highlight-text {
+        color: #d42426;
+        font-weight: 700;
+    }
+</style>
+
+<div class="modal fade modal-christmas" id="rulesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            
+            <div class="modal-header justify-content-center py-3">
+                <h4 class="modal-title fw-bold">
+                    <i class="bi bi-stars text-warning me-2"></i>¡Hola! Antes de empezar
+                </h4>
+            </div>
+
+            <div class="modal-body text-center px-4 py-4">
+                
+                <i class="bi bi-gift-fill modal-icon-top"></i>
+
+                <p class="fs-5 text-muted mb-4">
+                    Bienvenido al <span class="highlight-text">Juego del Amigo Invisible 2026</span>.<br>
+                    Para que nadie espíe tu regalo, necesitamos pedirte un favor:
+                </p>
+                
+                <div class="rule-box mb-4 shadow-sm">
+                    <div class="d-flex align-items-start mb-2">
+                        <i class="bi bi-phone-fill fs-4 text-success me-3 mt-1"></i>
+                        <div>
+                            <strong>Un dispositivo = Una persona</strong>
+                            <p class="small text-muted mb-0 fw-bold">Este celular/navegador quedará "vinculado" a ti.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-shield-lock-fill fs-4 text-success me-3 mt-1"></i>
+                        <div>
+                            <strong>¿Por qué?</strong>
+                            <p class="small text-muted mb-0 fw-bold">Si prestas tu celular luego de ver tu resultado, la otra persona verá a quién le tenés que regalar vos!, <strong>¡No arruines la sorpresa!</strong></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="small text-muted fw-bolder">
+                    Si hay alguien más con vos que quiere jugar, decile que use su propio celular o abrí otro navegador! (no sirve abrir otra pestaña, sory! 😆).
+                </p>
+
+            </div>
+
+            <div class="modal-footer justify-content-center bg-light border-0 pb-4 pt-0">
+                <button type="button" class="btn btn-christmas btn-lg rounded-pill px-5 shadow" data-bs-dismiss="modal">
+                    ¡Entendido, soy yo! 🎅
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- CONSTANTES DE ALMACENAMIENTO ---
+        const STORAGE_KEY = 'amigo_invisible_session_v1';
+        
+        // Variables globales
+        let participants = []; 
+
+        // --- 1. ROUTING & INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            const loader = document.getElementById('loaderView');
+            const adminView = document.getElementById('adminView');
+            const userView = document.getElementById('participantView');
+
+            loader.classList.add('d-none');
+
+            // NUEVO: AUTOCOMPLETAR TOKEN DESDE URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            if (urlToken) {
+                document.getElementById('inputToken').value = urlToken;
+            }
+
+            if (hash === '#admin') {
+                // MODO ADMIN
+                adminView.classList.remove('d-none');
+            } else {
+                // MODO USUARIO NORMAL
+                userView.classList.remove('d-none');
+                initUserFlow();
+            }
+        });
+
+        // --- 2. LÓGICA DE USUARIO (Frontend) ---
+        function initUserFlow() {
+            // A. Revisar si ya hay sesión guardada
+            const savedSession = localStorage.getItem(STORAGE_KEY);
+            
+            if (savedSession) {
+                // CASO: USUARIO RETORNA -> MOSTRAR RESULTADO GUARDADO DIRECTAMENTE
+                try {
+                    const sessionData = JSON.parse(savedSession);
+                    showPersistentResult(sessionData.myself, sessionData.friend);
+                } catch(e) {
+                    localStorage.removeItem(STORAGE_KEY); // Corrupto, limpiar
+                    showModal();
+                }
+            } else {
+                // CASO: USUARIO NUEVO -> MOSTRAR MODAL Y FORMULARIO
+                showModal();
+            }
+        }
+
+        function showModal() {
+            const myModal = new bootstrap.Modal(document.getElementById('rulesModal'));
+            myModal.show();
+        }
+
+        // --- 3. LOGICA DE REVELACIÓN (Core) ---
+        function revealSecretFriend() {
+            const tokenInput = document.getElementById('inputToken').value.trim();
+            const nVal = document.getElementById('searchName').value;
+            const lVal = document.getElementById('searchLastname').value;
+            
+            if(!tokenInput) return showError("Por favor pega el código que mandaron al grupo.");
+            if(!nVal || !lVal) return showError("Necesito tu nombre y apellido para saber quién eres.");
+
+            const myFullname = getFullName(nVal, lVal);
+
+            try {
+                // Decodificar Token (maneja URL completa o solo token)
+                // Limpiamos si por error pegaron la URL completa en el input manual
+                let cleanToken = tokenInput;
+                if(tokenInput.includes("token=")) {
+                    cleanToken = tokenInput.split("token=")[1];
+                }
+
+                const jsonStr = decodeURIComponent(atob(cleanToken));
+                const payload = JSON.parse(jsonStr);
+                const matches = payload.data;
+
+                // Buscar Match
+                const myFriend = matches[myFullname];
+
+                if (myFriend) {
+                    // ÉXITO: GUARDAR SESIÓN PERMANENTE
+                    const sessionData = {
+                        myself: getNiceName(nVal, lVal), // Nombre bonito para mostrar
+                        friend: myFriend, // Nombre del amigo
+                        tokenHash: payload.ts // Guardamos ID del sorteo por si acaso
+                    };
+                    
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+
+                    // Renderizar
+                    showPersistentResult(sessionData.myself, sessionData.friend);
+
+                } else {
+                    showError(`No te encontré como "${myFullname}". Revisa tildes o espacios.`);
+                }
+
+            } catch (e) {
+                console.error(e);
+                showError("El código del grupo parece inválido o está mal copiado.");
+            }
+        }
+
+        function showPersistentResult(me, friend) {
+            // Ocultar formulario, mostrar resultado fijo
+            document.getElementById('loginFormSection').classList.add('d-none');
+            document.getElementById('persistentResultSection').classList.remove('d-none');
+            
+            document.getElementById('userNameDisplay').innerText = me;
+            document.getElementById('friendNameDisplay').innerText = friend;
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorAlert');
+            el.innerText = msg;
+            el.classList.remove('d-none');
+        }
+
+        // --- 4. LÓGICA DE ADMIN (Backend Simulado) ---
+        // Helpers de string
+        const cleanStr = (str) => str.trim().replace(/\s+/g, ' ');
+        const getFullName = (n, l) => `${cleanStr(n)} ${cleanStr(l)}`.toUpperCase(); 
+        const getNiceName = (n, l) => { // Capitalizar bonito (Juan Perez)
+            const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+            return `${cap(cleanStr(n))} ${cap(cleanStr(l))}`;
+        }
+
+        function addParticipant() {
+            const nInput = document.getElementById('addName');
+            const lInput = document.getElementById('addLastname');
+            
+            if(!nInput.value || !lInput.value) return;
+
+            const fullname = getFullName(nInput.value, lInput.value);
+            const niceName = getNiceName(nInput.value, lInput.value); // Guardamos versión bonita para mostrar
+
+            if(participants.some(p => p.fullname === fullname)) return alert("Repetido");
+
+            participants.push({ fullname, niceName });
+            
+            // Render Lista
+            const list = document.getElementById('participantsList');
+            list.innerHTML = participants.map((p, i) => `
+                <li class="list-group-item d-flex justify-content-between p-2">
+                    <span>${p.niceName}</span>
+                    <i class="bi bi-trash text-danger" style="cursor:pointer" onclick="participants.splice(${i},1); addParticipant();"></i>
+                </li>`).join(''); 
+            
+            updateListVisuals(); 
+            nInput.value = ''; lInput.value = ''; nInput.focus();
+        }
+
+        function updateListVisuals() {
+            const list = document.getElementById('participantsList');
+            document.getElementById('countDisplay').innerText = participants.length;
+            list.innerHTML = participants.map((p, i) => `
+                <li class="list-group-item d-flex justify-content-between p-2">
+                    <span>${p.niceName}</span>
+                    <i class="bi bi-x-circle-fill text-danger" style="cursor:pointer" onclick="removeP(${i})"></i>
+                </li>`).join('');
+        }
+        function removeP(i) { participants.splice(i,1); updateListVisuals(); }
+
+        function generateRandomGroup() {
+            if(participants.length < 2) return alert("Mínimo 2 personas");
+            
+            let givers = participants.map(p => p.fullname);
+            let receiverNames = participants.map(p => p.niceName); 
+            
+            let isValid = false;
+            let attempts = 0;
+
+            while(!isValid && attempts < 1000) {
+                for (let i = receiverNames.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [receiverNames[i], receiverNames[j]] = [receiverNames[j], receiverNames[i]];
+                }
+                
+                isValid = givers.every((giverFull, i) => {
+                    const receiverFull = getFullName(receiverNames[i].split(" ")[0], receiverNames[i].split(" ")[1] || "");
+                    return giverFull !== receiverFull;
+                });
+                attempts++;
+            }
+
+            if(!isValid) return alert("Error al sortear. Intenta de nuevo.");
+
+            let matches = {};
+            givers.forEach((g, i) => matches[g] = receiverNames[i]);
+
+            const payload = { ts: Date.now(), data: matches };
+            const token = btoa(encodeURIComponent(JSON.stringify(payload)));
+
+            // NUEVO: Generar Link Completo
+            const baseUrl = window.location.href.split('?')[0].split('#')[0]; // URL limpia
+            const fullLink = `${baseUrl}?token=${token}`;
+
+            document.getElementById('outputToken').value = fullLink;
+            document.getElementById('adminResult').classList.remove('d-none');
+        }
+
+        function copyToken() {
+            document.getElementById('outputToken').select();
+            document.execCommand('copy');
+            alert("¡Enlace copiado! Mándalo al grupo de WhatsApp.");
         }
     </script>
   </body>
